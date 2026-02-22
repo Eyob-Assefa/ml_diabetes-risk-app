@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 import numpy as np
 
-# 1. Load the Model and the Scaler
+#Load the Model and the Scaler
 model = joblib.load('diabetes_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
@@ -28,7 +28,7 @@ st.set_page_config(page_title="Diabetes Risk Predictor", layout="centered")
 st.title("🩺 Diabetes Health Risk Predictor")
 st.markdown("Enter your metrics to assess your risk based on lifestyle and health indicators.")
 
-# --- MAJOR INDICATORS (Top 6 most impactful) ---
+# Major indicators (Top 6 most impactful) ---
 st.header("Core Health Metrics")
 col1, col2 = st.columns(2)
 
@@ -47,7 +47,7 @@ age_cat = convert_age(user_age)
 high_bp_num = 1 if high_bp == "Yes" else 0
 high_chol_num = 1 if high_chol == "Yes" else 0
 
-# --- ADVANCED/LIFESTYLE OPTIONS (Hidden to keep UI clean) ---
+# advanced option (hidden to keep the UI clean)
 with st.expander("Additional Lifestyle & History"):
     st.info("The following are set to common defaults. Adjust them for a more precise prediction.")
     col3, col4 = st.columns(2)
@@ -71,23 +71,28 @@ with st.expander("Additional Lifestyle & History"):
         edu = st.slider("Education Level (1-6)", 1, 6, 4)
         income = st.slider("Income Scale (1-8)", 1, 8, 5)
 
-# --- FINAL PREDICTION LOGIC ---
+# final prediction logic
 if st.button("Calculate Risk Score", type="primary"):
     
-    # Must follow the EXACT column order from the dataset
-    # 1.HighBP, 2.HighChol, 3.CholCheck, 4.BMI, 5.Smoker, 6.Stroke, 7.HeartDisease, 8.PhysActivity, 
-    # 9.Fruits, 10.Veggies, 11.HvyAlc, 12.AnyHealthcare, 13.NoDocCost, 14.GenHlth, 15.MentHlth, 
-    # 16.PhysHlth, 17.DiffWalk, 18.Sex, 19.Age, 20.Education, 21.Income
-    
+    column_names = [
+        'HighBP', 'HighChol', 'CholCheck', 'BMI', 'Smoker', 'Stroke', 
+        'HeartDiseaseorAttack', 'PhysActivity', 'Fruits', 'Veggies', 
+        'HvyAlcoholConsump', 'AnyHealthcare', 'NoDocbcCost', 'GenHlth', 
+        'MentHlth', 'PhysHlth', 'DiffWalk', 'Sex', 'Age', 'Education', 'Income'
+    ]
+
     features = [
         high_bp_num, high_chol_num, int(chol_check), bmi, int(smoker), int(stroke), 
         int(heart_dis), int(phys_act), int(fruits), int(veggies), int(hvy_alc), 
         int(healthcare), int(doc_cost), gen_hlth, ment_hlth, phys_hlth, 
         int(diff_walk), (1 if sex == "Male" else 0), age_cat, edu, income
     ]
-    
-    # Pre-processing and Prediction
-    features_scaled = scaler.transform([features])
+
+    # Create the DataFrame 
+    features_df = pd.DataFrame([features], columns=column_names)
+
+    # Scale and Predict 
+    features_scaled = scaler.transform(features_df)
     prob = model.predict_proba(features_scaled)[0][1]
     
     st.divider()
